@@ -1,6 +1,6 @@
 # cursor-wsl-health
 
-**Private** Logic Encoder operator tool for **Cursor IDE on Windows + WSL2**.
+**Public** Logic Encoder operator tool for **Cursor IDE on Windows + WSL2**.
 
 Interactive bash menu that monitors WSL/Cursor health, cleans safe cache (agent tool dumps, old Windows logs), and optionally soft-resets `cursor-server` — while keeping **one long agent chat** (Reload Window, not New Chat).
 
@@ -9,7 +9,8 @@ Interactive bash menu that monitors WSL/Cursor health, cleans safe cache (agent 
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Menu actions, paths, safety boundaries, env vars |
 | [REPOS.md](REPOS.md) | Related repositories |
 
-GitHub: **private** — `logicencoder/cursor-wsl-health`, branch **`main`**.
+GitHub: **public** — [logicencoder/cursor-wsl-health](https://github.com/logicencoder/cursor-wsl-health), branch **`main`**.  
+Operator guide: [cursor-wsl-health-overview](https://github.com/logicencoder/cursor-wsl-health-overview).
 
 ## Problem it solves
 
