@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Cursor + WSL health — interactive menu. No arguments needed.
+# Logic Encoder — https://logicencoder.com
 # Repo: https://github.com/logicencoder/cursor-wsl-health
 # Run: ~/cursor_wsl_health.sh  (symlink to this file)
 #
@@ -411,6 +412,7 @@ show_menu() {
   echo " 11) Tips — one chat without losing context"
   echo "  0) Exit"
   hr
+  info "Logic Encoder — https://logicencoder.com"
 }
 
 interactive_menu() {
@@ -441,6 +443,10 @@ interactive_menu() {
 
 # Legacy CLI (optional)
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  echo "Cursor WSL health — Logic Encoder"
+  echo "  https://logicencoder.com"
+  echo "  https://github.com/logicencoder/cursor-wsl-health"
+  echo ""
   echo "Run without arguments: ~/cursor_wsl_health.sh"
   exit 0
 fi

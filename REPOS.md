@@ -1,5 +1,7 @@
 # Related repositories
 
+**Logic Encoder** — [logicencoder.com](https://logicencoder.com)
+
 | Repo | Visibility | Role |
 |------|------------|------|
 | [cursor-wsl-health](https://github.com/logicencoder/cursor-wsl-health) | public | This script — single repo (no `-overview`; small utility) |

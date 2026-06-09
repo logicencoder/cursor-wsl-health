@@ -1,5 +1,7 @@
 # Architecture — cursor-wsl-health
 
+**Logic Encoder** — [logicencoder.com](https://logicencoder.com) · [repo](https://github.com/logicencoder/cursor-wsl-health)
+
 Single-file bash application: `cursor_wsl_health.sh`. No dependencies beyond standard Linux utilities (`find`, `du`, `free`, `pgrep`, `ps`, optional `numfmt`, optional `sudo` for `drop_caches`).
 
 ## Runtime layout
@@ -88,3 +90,7 @@ Cleaning and server reset do **not** delete chat history. Operator must use **De
 | `cursor_wsl_health.sh` | ~460 | Entire application |
 
 No tests, no CI, no package manager — intentional minimal scope for WSL operator use.
+
+---
+
+© [Logic Encoder](https://logicencoder.com)

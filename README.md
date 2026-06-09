@@ -1,6 +1,6 @@
 # cursor-wsl-health
 
-Small **public** bash utility for **Cursor IDE on Windows + WSL2** — one repo, no separate overview (not a product-sized app).
+By **[Logic Encoder](https://logicencoder.com)** — small **public** bash utility for **Cursor IDE on Windows + WSL2** (one repo, no separate overview).
 
 Interactive menu: WSL/Cursor health dashboard, safe cache clean, optional `cursor-server` soft reset — while keeping **one long agent chat** (Reload Window, not New Chat).
 
@@ -79,4 +79,6 @@ Chat transcripts, project reports/scripts, source code, git, existing checkpoint
 
 Not Cursor support, not a transcript editor, not for SOL/Hostinger deploy — WSL dev helper only.
 
-© Logic Encoder — use at your own risk.
+**Logic Encoder** — [logicencoder.com](https://logicencoder.com) · [GitHub](https://github.com/logicencoder/cursor-wsl-health)
+
+Use at your own risk.
