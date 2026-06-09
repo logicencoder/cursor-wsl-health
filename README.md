@@ -28,8 +28,7 @@ Cursor often hits **Electron renderer OOM** (`"reason":"oom"` in `cursor-sentry-
 ```bash
 git clone https://github.com/logicencoder/cursor-health.git ~/cursor-health
 chmod +x ~/cursor-health/cursor_health.sh
-ln -sf ~/cursor-health/cursor_health.sh ~/cursor_health.sh
-~/cursor_health.sh
+~/cursor-health/cursor_health.sh
 ```
 
 Run in a **terminal** (TTY), not a non-interactive IDE output panel.
@@ -70,10 +69,10 @@ Chat transcripts, project reports/scripts, source code, git, existing checkpoint
 ## CLI
 
 ```bash
-~/cursor_health.sh status
-~/cursor_health.sh clean
-~/cursor_health.sh soft-reset
-~/cursor_health.sh all
+~/cursor-health/cursor_health.sh status
+~/cursor-health/cursor_health.sh clean
+~/cursor-health/cursor_health.sh soft-reset
+~/cursor-health/cursor_health.sh all
 ```
 
 **Logic Encoder** — [logicencoder.com](https://logicencoder.com) · [GitHub](https://github.com/logicencoder/cursor-health)

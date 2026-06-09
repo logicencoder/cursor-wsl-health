@@ -2,7 +2,7 @@
 # Cursor health — interactive menu. Linux + WSL. No arguments needed.
 # Logic Encoder — https://logicencoder.com
 # Repo: https://github.com/logicencoder/cursor-health
-# Run: ~/cursor_health.sh
+# Run: ~/cursor-health/cursor_health.sh
 #
 # Keeps ONE long agent chat: use "Reload Window" after clean/reset (not New Chat).
 
@@ -504,7 +504,7 @@ if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   echo "  https://logicencoder.com"
   echo "  https://github.com/logicencoder/cursor-health"
   echo ""
-  echo "Run without arguments: ~/cursor_health.sh"
+  echo "Run without arguments: ~/cursor-health/cursor_health.sh"
   exit 0
 fi
 

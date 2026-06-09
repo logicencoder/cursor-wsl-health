@@ -22,12 +22,10 @@ Single-file bash application: `cursor_health.sh`. GNU/Linux: bare Ubuntu/Debian 
 
 ```
 ~/cursor-health/
-  cursor_health.sh
+  cursor_health.sh   # run directly — no symlinks
   README.md
   ARCHITECTURE.md
   REPOS.md
-
-~/cursor_health.sh   # optional symlink
 ```
 
 ## Configuration
