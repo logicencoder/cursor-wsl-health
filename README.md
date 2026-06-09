@@ -1,76 +1,72 @@
 # cursor-wsl-health
 
-**Public** Logic Encoder operator tool for **Cursor IDE on Windows + WSL2**.
+Small **public** bash utility for **Cursor IDE on Windows + WSL2** — one repo, no separate overview (not a product-sized app).
 
-Interactive bash menu that monitors WSL/Cursor health, cleans safe cache (agent tool dumps, old Windows logs), and optionally soft-resets `cursor-server` — while keeping **one long agent chat** (Reload Window, not New Chat).
+Interactive menu: WSL/Cursor health dashboard, safe cache clean, optional `cursor-server` soft reset — while keeping **one long agent chat** (Reload Window, not New Chat).
 
 | Doc | Purpose |
 |-----|---------|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Menu actions, paths, safety boundaries, env vars |
-| [REPOS.md](REPOS.md) | Related repositories |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Functions, paths, safety boundaries |
 
-GitHub: **public** — [logicencoder/cursor-wsl-health](https://github.com/logicencoder/cursor-wsl-health), branch **`main`**.  
-Operator guide: [cursor-wsl-health-overview](https://github.com/logicencoder/cursor-wsl-health-overview).
+GitHub: [logicencoder/cursor-wsl-health](https://github.com/logicencoder/cursor-wsl-health), branch **`main`**.
 
-## Problem it solves
+## Why it exists
 
-Windows Cursor often crashes with **Electron renderer OOM** (`"reason":"oom"` in `cursor-sentry-events.log`), even when WSL has plenty of RAM. Large `agent-tools/*.txt` dumps under `~/.cursor/projects/` and a multi-day `cursor-server` process (~2 GB RSS) make this worse. This script cleans only safe caches and shows what to do next.
+Cursor on Windows often crashes with **Electron renderer OOM** (`"reason":"oom"` in `cursor-sentry-events.log`), even when WSL has plenty of RAM. Large `agent-tools/*.txt` dumps and a multi-day `cursor-server` (~2 GB RSS) make long agent sessions worse.
 
-## Install (WSL)
+| Symptom | Likely cause | This tool |
+|---------|--------------|-----------|
+| Freeze/reload after heavy agent use | Windows renderer OOM | Cleans large tool dumps; counts OOM in logs |
+| WSL RAM OK but Cursor still dies | Crash on Windows, not WSL OOM | Dashboard shows both sides |
+| Sluggish chat after days | Big transcript + stale server | Transcript sizes; soft reset (5/6) |
+| Afraid cleanup kills context | Transcripts stay on disk | **Reload Window**, same chat |
+
+## Install
 
 ```bash
 git clone https://github.com/logicencoder/cursor-wsl-health.git ~/cursor-wsl-health
 chmod +x ~/cursor-wsl-health/cursor_wsl_health.sh
 ln -sf ~/cursor-wsl-health/cursor_wsl_health.sh ~/cursor_wsl_health.sh
-```
-
-Run:
-
-```bash
 ~/cursor_wsl_health.sh
 ```
 
-No CLI arguments required — use the numbered menu.
+Run in a **WSL terminal** (TTY), not a non-interactive output panel.
 
-## Recommended workflow
+## Workflow
 
-1. **Menu 4** — clean all (agent-tools + old Windows logs + optional `drop_caches`)
-2. **Ctrl+Shift+P → Developer: Reload Window** — same chat, not New Chat
-3. **Menu 5** or **6** only when `cursor-server` uptime is multi-day
-4. After crash/reload: @-mention `.cursor_session_checkpoint.md` in your project
+1. **Menu 4** — clean all (usual)
+2. **Ctrl+Shift+P → Developer: Reload Window** — same chat
+3. **Menu 6** only when `cursor-server` uptime is multi-day
+4. After reload: @-mention `.cursor_session_checkpoint.md` in your project if needed
 
-## Menu summary
+## Menu
 
 | # | Action |
 |---|--------|
 | 1 | Status dashboard |
-| 2 | Delete agent-tools `.txt` files larger than 10 MB |
-| 3 | Delete Windows Cursor log folders older than 7 days |
-| 4 | All of 2+3 + Linux page cache (recommended) |
+| 2 | Delete agent-tools `.txt` > 10 MB |
+| 3 | Delete Windows Cursor logs > 7 days |
+| 4 | 2 + 3 + page cache (recommended) |
 | 5 | Soft reset WSL `cursor-server` |
 | 6 | Full tune-up (4 + 5) |
-| 7 | OOM crash report from Windows logs |
-| 8–11 | Checkpoint template, inventory, tips |
+| 7 | OOM crash report |
+| 8–11 | Checkpoint, inventory, tips |
 
 ## Environment variables
 
 | Variable | Default | Meaning |
 |----------|---------|---------|
-| `WIN_USER` | `Lojzek` | Windows username for `/mnt/c/Users/...` |
-| `CURSOR_HEALTH_PROJECT` | `~/cex_dex_arb_app` | Project root for inventory/checkpoint |
-| `CURSOR_HEALTH_PROJECT_LABEL` | basename of project | Dashboard label |
-| `CURSOR_HEALTH_CHECKPOINT` | `{project}/.cursor_session_checkpoint.md` | Session checkpoint file |
-| `CURSOR_HEALTH_REPORTS` | `{project}/reports` | Reports dir (never deleted by clean) |
-| `CURSOR_HEALTH_SCRIPTS` | `{project}/scripts` | Scripts dir (never deleted by clean) |
+| `WIN_USER` | `Lojzek` | Windows user for `/mnt/c/Users/...` |
+| `CURSOR_HEALTH_PROJECT` | `~/cex_dex_arb_app` | Project for inventory/checkpoint |
+| `CURSOR_HEALTH_CHECKPOINT` | `{project}/.cursor_session_checkpoint.md` | Session notes file |
+| `CURSOR_HEALTH_REPORTS` / `CURSOR_HEALTH_SCRIPTS` | `{project}/reports`, `scripts` | Never deleted by clean |
 | `NO_COLOR` | unset | Disable ANSI colors |
 
-## What clean never deletes
+## Never deleted by clean
 
-- Chat transcripts (`agent-transcripts/*.jsonl`)
-- Project `reports/`, `scripts/`, source code, git history
-- Session checkpoint file (only created if missing via menu 8)
+Chat transcripts, project reports/scripts, source code, git, existing checkpoint.
 
-## Legacy CLI
+## CLI shortcuts
 
 ```bash
 ~/cursor_wsl_health.sh status
@@ -79,6 +75,8 @@ No CLI arguments required — use the numbered menu.
 ~/cursor_wsl_health.sh all
 ```
 
-## Prod path
+## What it is not
 
-WSL dev only: `~/cursor-wsl-health/` with symlink `~/cursor_wsl_health.sh`. Not deployed to SOL or Hostinger.
+Not Cursor support, not a transcript editor, not for SOL/Hostinger deploy — WSL dev helper only.
+
+© Logic Encoder — use at your own risk.
