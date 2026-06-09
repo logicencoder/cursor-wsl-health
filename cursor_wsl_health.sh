@@ -1,23 +1,47 @@
 #!/usr/bin/env bash
-# Cursor + WSL health — interactive menu. No arguments needed.
+# Cursor health — interactive menu. Linux + WSL. No arguments needed.
 # Logic Encoder — https://logicencoder.com
 # Repo: https://github.com/logicencoder/cursor-wsl-health
 # Run: ~/cursor_wsl_health.sh  (symlink to this file)
 #
 # Keeps ONE long agent chat: use "Reload Window" after clean/reset (not New Chat).
-# All user-facing text in this script is English (see ~/.cursor/rules/cursor-wsl-health.mdc).
 
-HOME_LOJZO="${HOME:-/home/lojzo}"
+HOME_DIR="${HOME:-/home/lojzo}"
 WIN_USER="${WIN_USER:-Lojzek}"
-WIN_LOG_ROOT="/mnt/c/Users/${WIN_USER}/AppData/Roaming/Cursor/logs"
-AGENT_ROOT="${HOME_LOJZO}/.cursor/projects"
-PROJECT_ROOT="${CURSOR_HEALTH_PROJECT:-${HOME_LOJZO}/cex_dex_arb_app}"
+AGENT_ROOT="${HOME_DIR}/.cursor/projects"
+PROJECT_ROOT="${CURSOR_HEALTH_PROJECT:-${HOME_DIR}/cex_dex_arb_app}"
 PROJECT_LABEL="${CURSOR_HEALTH_PROJECT_LABEL:-$(basename "$PROJECT_ROOT")}"
 STATE_FILE="${CURSOR_HEALTH_CHECKPOINT:-${PROJECT_ROOT}/.cursor_session_checkpoint.md}"
 PROJECT_REPORTS="${CURSOR_HEALTH_REPORTS:-${PROJECT_ROOT}/reports}"
 PROJECT_SCRIPTS="${CURSOR_HEALTH_SCRIPTS:-${PROJECT_ROOT}/scripts}"
 TOOL_SIZE_MB=10
 LOG_AGE_DAYS=7
+
+# Runtime: WSL vs bare Linux (Ubuntu, etc.)
+is_wsl() {
+  [[ -n "${WSL_DISTRO_NAME:-}" ]] || grep -qiE 'microsoft|wsl' /proc/version 2>/dev/null
+}
+
+init_platform() {
+  if is_wsl; then
+    PLATFORM_LABEL="WSL"
+  else
+    PLATFORM_LABEL="Linux"
+  fi
+  CURSOR_LOG_ROOTS=()
+  if is_wsl; then
+    local win_logs="/mnt/c/Users/${WIN_USER}/AppData/Roaming/Cursor/logs"
+    [[ -d "$win_logs" ]] && CURSOR_LOG_ROOTS+=("$win_logs")
+  fi
+  local native_logs="${HOME_DIR}/.config/Cursor/logs"
+  [[ -d "$native_logs" ]] && CURSOR_LOG_ROOTS+=("$native_logs")
+}
+
+has_cursor_logs() {
+  ((${#CURSOR_LOG_ROOTS[@]} > 0))
+}
+
+init_platform
 
 # --- colors ($'...' so \033 is a real escape, not literal text) ---
 use_color() { [[ -t 1 ]] && [[ -z "${NO_COLOR:-}" ]]; }
@@ -63,11 +87,23 @@ dir_size_bytes() {
 }
 
 count_oom_events() {
-  local n=0
-  if [[ -d "$WIN_LOG_ROOT" ]]; then
-    n=$(grep -rh '"reason":"oom"' "$WIN_LOG_ROOT"/*/cursor-sentry-events.log 2>/dev/null | wc -l || true)
+  local n=0 root
+  if ! has_cursor_logs; then
+    echo 0
+    return
   fi
+  for root in "${CURSOR_LOG_ROOTS[@]}"; do
+    n=$((n + $(grep -rh '"reason":"oom"' "$root"/*/cursor-sentry-events.log 2>/dev/null | wc -l || echo 0)))
+  done
   echo "${n// /}"
+}
+
+grep_oom_timestamps() {
+  local root
+  for root in "${CURSOR_LOG_ROOTS[@]}"; do
+    grep -rh '"reason":"oom"' "$root"/*/cursor-sentry-events.log 2>/dev/null \
+      | sed -n 's/.*\([0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\} [0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}\).*/\1/p'
+  done
 }
 
 cursor_server_pid() {
@@ -117,6 +153,7 @@ transcript_top_stats() {
 }
 
 print_dashboard() {
+  init_platform
   agent_tools_stats
   local oom_count mem_avail cs_uptime cs_mb fw eh
   oom_count=$(count_oom_events)
@@ -126,9 +163,9 @@ print_dashboard() {
   eh=$(pgrep -cf 'type=extensionHost' 2>/dev/null || echo 0)
   fw=$(pgrep -cf 'type=fileWatcher' 2>/dev/null || echo 0)
 
-  title "CURSOR + WSL HEALTH — $(date '+%Y-%m-%d %H:%M:%S')"
+  title "CURSOR HEALTH (${PLATFORM_LABEL}) — $(date '+%Y-%m-%d %H:%M:%S')"
 
-  printf '%s%s%s\n' "$C_CYN" "Memory (WSL)" "$C_RESET"
+  printf '%s%s%s\n' "$C_CYN" "Memory (${PLATFORM_LABEL})" "$C_RESET"
   free -h | awk 'NR<=2 {print "  "$0}'
   info "Available: $(human_bytes "$mem_avail")"
 
@@ -144,7 +181,7 @@ print_dashboard() {
   info "extensionHost: ${eh}  |  fileWatcher: ${fw}"
   (( fw > 3 )) && warn "Many fileWatchers — close extra Cursor windows"
 
-  printf '\n%s%s%s\n' "$C_CYN" "Agent cache (causes Windows OOM)" "$C_RESET"
+  printf '\n%s%s%s\n' "$C_CYN" "Agent cache (causes renderer OOM)" "$C_RESET"
   info "agent-tools .txt files: ${TOTAL_TXT}  |  total: $(human_bytes "$TOTAL_TXT_BYTES")"
   if (( LARGE_COUNT > 0 )); then
     bad "Large files (>${TOOL_SIZE_MB} MB): ${LARGE_COUNT}  |  $(human_bytes "$LARGE_BYTES") eligible for deletion"
@@ -166,26 +203,36 @@ print_dashboard() {
     warn "Long chat = large transcript — clean won't help; Reload Window will"
   fi
 
-  printf '\n%s%s%s\n' "$C_CYN" "Windows Cursor OOM (renderer crash)" "$C_RESET"
+  printf '\n%s%s%s\n' "$C_CYN" "Cursor OOM (renderer crash logs)" "$C_RESET"
+  if has_cursor_logs; then
+    info "Log roots: ${#CURSOR_LOG_ROOTS[@]}"
+    for root in "${CURSOR_LOG_ROOTS[@]}"; do
+      info "  ${root}"
+    done
+  fi
   if (( oom_count > 0 )); then
     bad "Total OOM crashes in logs: ${oom_count}"
-    grep -rh '"reason":"oom"' "$WIN_LOG_ROOT"/*/cursor-sentry-events.log 2>/dev/null \
-      | sed -n 's/.*\([0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\} [0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}\).*/\1/p' \
-      | tail -3 | while read -r t; do info "latest: $t"; done
+    grep_oom_timestamps | tail -3 | while read -r t; do info "latest: $t"; done
   else
-    ok "No OOM in Windows logs (or /mnt/c unavailable)"
+    if has_cursor_logs; then
+      ok "No OOM events in Cursor logs"
+    else
+      ok "No Cursor log dirs found (WSL: set WIN_USER; Linux: ~/.config/Cursor/logs)"
+    fi
   fi
 
-  printf '\n%s%s%s\n' "$C_CYN" "Project ${PROJECT_LABEL} (tests — NEVER deleted)" "$C_RESET"
-  if [[ -d "$PROJECT_REPORTS" ]]; then
-    local rc
-    rc=$(find "$PROJECT_REPORTS" -maxdepth 1 -type f 2>/dev/null | wc -l)
-    ok "reports/: ${rc} files  ($(human_bytes "$(dir_size_bytes "$PROJECT_REPORTS")"))"
-  fi
-  if [[ -d "$PROJECT_SCRIPTS" ]]; then
-    local sc
-    sc=$(find "$PROJECT_SCRIPTS" -maxdepth 1 \( -name '*empirical*' -o -name '*playwright*' -o -name 'alva_*' \) -type f 2>/dev/null | wc -l)
-    ok "scripts/ test files: ${sc}"
+  if [[ -d "$PROJECT_REPORTS" || -d "$PROJECT_SCRIPTS" ]]; then
+    printf '\n%s%s%s\n' "$C_CYN" "Project ${PROJECT_LABEL} (tests — NEVER deleted)" "$C_RESET"
+    if [[ -d "$PROJECT_REPORTS" ]]; then
+      local rc
+      rc=$(find "$PROJECT_REPORTS" -maxdepth 1 -type f 2>/dev/null | wc -l)
+      ok "reports/: ${rc} files  ($(human_bytes "$(dir_size_bytes "$PROJECT_REPORTS")"))"
+    fi
+    if [[ -d "$PROJECT_SCRIPTS" ]]; then
+      local sc
+      sc=$(find "$PROJECT_SCRIPTS" -maxdepth 1 \( -name '*empirical*' -o -name '*playwright*' -o -name 'alva_*' \) -type f 2>/dev/null | wc -l)
+      ok "scripts/ test files: ${sc}"
+    fi
   fi
 
   printf '\n%s%s%s\n' "$C_CYN" "Session checkpoint" "$C_RESET"
@@ -233,21 +280,29 @@ do_clean_agent_tools() {
   warn "Now: Reload Window in Cursor (same chat)"
 }
 
-do_clean_win_logs() {
-  title "Cleaning old Windows Cursor logs (>${LOG_AGE_DAYS} days)"
-  if [[ ! -d "$WIN_LOG_ROOT" ]]; then
-    bad "Unavailable: $WIN_LOG_ROOT"
+do_clean_cursor_logs() {
+  init_platform
+  title "Cleaning old Cursor logs (>${LOG_AGE_DAYS} days)"
+  if ! has_cursor_logs; then
+    bad "No Cursor log directories found"
+    if is_wsl; then
+      info "WSL: check WIN_USER (now: ${WIN_USER}) and /mnt/c/Users/..."
+    else
+      info "Linux: expected ~/.config/Cursor/logs"
+    fi
     return
   fi
-  local removed=0 freed=0
-  while IFS= read -r d; do
-    local sz
-    sz=$(dir_size_bytes "$d")
-    bad "deleting $(basename "$d")  ($(human_bytes "$sz"))"
-    rm -rf "$d"
-    removed=$((removed + 1))
-    freed=$((freed + sz))
-  done < <(find "$WIN_LOG_ROOT" -mindepth 1 -maxdepth 1 -type d -mtime +"${LOG_AGE_DAYS}" 2>/dev/null)
+  local removed=0 freed=0 root d
+  for root in "${CURSOR_LOG_ROOTS[@]}"; do
+    while IFS= read -r d; do
+      local sz
+      sz=$(dir_size_bytes "$d")
+      bad "deleting $(basename "$d")  ($(human_bytes "$sz"))  under ${root}"
+      rm -rf "$d"
+      removed=$((removed + 1))
+      freed=$((freed + sz))
+    done < <(find "$root" -mindepth 1 -maxdepth 1 -type d -mtime +"${LOG_AGE_DAYS}" 2>/dev/null)
+  done
 
   if (( removed > 0 )); then
     ok "Deleted session folders: ${removed}"
@@ -269,7 +324,7 @@ do_drop_caches() {
 do_clean_all() {
   do_clean_agent_tools
   echo ""
-  do_clean_win_logs
+  do_clean_cursor_logs
   echo ""
   do_drop_caches
   title "DONE — clean all"
@@ -278,7 +333,7 @@ do_clean_all() {
 }
 
 do_soft_reset() {
-  title "Soft reset cursor-server (WSL)"
+  title "Soft reset cursor-server"
   local pid uptime
   pid=$(cursor_server_pid)
   uptime=$(cursor_server_uptime_human)
@@ -307,9 +362,10 @@ do_tuneup() {
 }
 
 do_oom_report() {
-  title "OOM crash report (Windows renderer)"
-  if [[ ! -d "$WIN_LOG_ROOT" ]]; then
-    bad "Logs unavailable under $WIN_LOG_ROOT"
+  init_platform
+  title "OOM crash report (renderer)"
+  if ! has_cursor_logs; then
+    bad "No Cursor log directories found"
     return
   fi
   local total
@@ -317,11 +373,9 @@ do_oom_report() {
   bad "Total OOM events: ${total}"
   echo ""
   info "Last 15 crashes:"
-  grep -rh '"reason":"oom"' "$WIN_LOG_ROOT"/*/cursor-sentry-events.log 2>/dev/null \
-    | sed -n 's/.*\([0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\} [0-9]\{2\}:[0-9]\{2\}:[0-9]\{2\}\).*/\1/p' \
-    | tail -15 | nl -w2 -s'. '
+  grep_oom_timestamps | tail -15 | nl -w2 -s'. '
   echo ""
-  warn "Cause: Electron renderer OOM — not WSL, not your code"
+  warn "Cause: Electron renderer OOM — not your project code"
   info "Fix: menu [3] or [4], then Reload Window; one chat is fine"
 }
 
@@ -386,7 +440,7 @@ do_project_inventory() {
 
 do_tips() {
   title "One chat — keep context"
-  cat <<'EOF'
+  cat <<EOF
   1. You do NOT need a new chat because of memory pressure.
   2. After clean/reset: Ctrl+Shift+P → "Developer: Reload Window"
   3. Checkpoint: .cursor_session_checkpoint.md — @-mention after reload
@@ -394,16 +448,17 @@ do_tips() {
   5. Disable Browser MCP when you are not using Playwright
   6. Run menu [5] occasionally if cursor-server has been up for days
   7. Long chat transcripts grow — that is OK; clean only removes tool dumps
+  8. Platform: ${PLATFORM_LABEL} — logs under ~/.config/Cursor/logs (Linux) or /mnt/c/... (WSL)
 EOF
 }
 
 show_menu() {
-  printf '\n%s%sMENU%s\n' "$C_BOLD" "$C_CYN" "$C_RESET"
+  printf '\n%s%sMENU%s  (%s)\n' "$C_BOLD" "$C_CYN" "$C_RESET" "$PLATFORM_LABEL"
   echo "  1) Status dashboard (refresh)"
   echo "  2) Clean large agent-tools (>${TOOL_SIZE_MB} MB)"
-  echo "  3) Clean old Windows Cursor logs"
+  echo "  3) Clean old Cursor logs (>${LOG_AGE_DAYS} d)"
   echo "  4) Clean all (2+3+cache) — recommended"
-  echo "  5) Soft reset cursor-server (WSL)"
+  echo "  5) Soft reset cursor-server"
   echo "  6) FULL tune-up (4 + 5)"
   echo "  7) OOM crash report"
   echo "  8) Create checkpoint template"
@@ -417,13 +472,14 @@ show_menu() {
 
 interactive_menu() {
   while true; do
+    init_platform
     show_menu
     printf '%sChoice [0-11]: %s' "$C_BOLD" "$C_RESET"
     read -r choice
     case "${choice:-}" in
       1) clear 2>/dev/null || true; print_dashboard ;;
       2) do_clean_agent_tools ;;
-      3) do_clean_win_logs ;;
+      3) do_clean_cursor_logs ;;
       4) do_clean_all ;;
       5) do_soft_reset ;;
       6) do_tuneup ;;
@@ -443,7 +499,8 @@ interactive_menu() {
 
 # Legacy CLI (optional)
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
-  echo "Cursor WSL health — Logic Encoder"
+  init_platform
+  echo "Cursor health — Logic Encoder (${PLATFORM_LABEL})"
   echo "  https://logicencoder.com"
   echo "  https://github.com/logicencoder/cursor-wsl-health"
   echo ""
