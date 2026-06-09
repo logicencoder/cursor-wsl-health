@@ -1,6 +1,6 @@
 # cursor-wsl-health
 
-By **[Logic Encoder](https://logicencoder.com)** — small **public** bash utility for **Cursor IDE on Windows + WSL2** (one repo, no separate overview).
+By **[Logic Encoder](https://logicencoder.com)** — small **private** bash utility for **Cursor IDE on Windows + WSL2** (one repo, no `-overview` — see `logicencoder-small-util-repo` Cursor rule).
 
 Interactive menu: WSL/Cursor health dashboard, safe cache clean, optional `cursor-server` soft reset — while keeping **one long agent chat** (Reload Window, not New Chat).
 
