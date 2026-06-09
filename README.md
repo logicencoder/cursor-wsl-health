@@ -1,6 +1,6 @@
-# cursor-wsl-health
+# cursor-health
 
-By **[Logic Encoder](https://logicencoder.com)** — small **public** bash utility for **Cursor IDE on Linux** (bare Ubuntu/Debian and **WSL2**). One repo, no `-overview`.
+By **[Logic Encoder](https://logicencoder.com)** — small **public** bash utility for **Cursor IDE on Linux**: bare **Ubuntu/Debian** and **WSL2**. One repo, no `-overview`.
 
 Interactive menu: health dashboard, safe cache clean, optional `cursor-server` soft reset — **one long agent chat** (Reload Window, not New Chat).
 
@@ -8,16 +8,16 @@ Interactive menu: health dashboard, safe cache clean, optional `cursor-server` s
 |-----|---------|
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Functions, paths, platform detection |
 
-GitHub: [logicencoder/cursor-wsl-health](https://github.com/logicencoder/cursor-wsl-health), branch **`main`**.
+GitHub: [logicencoder/cursor-health](https://github.com/logicencoder/cursor-health), branch **`main`**.
 
 ## Platforms
 
+Works on **both** — the script auto-detects **WSL** vs **bare Linux**:
+
 | Environment | What works |
 |-------------|------------|
-| **WSL2** | Full: Linux memory, cursor-server, agent-tools, Windows logs via `/mnt/c/Users/{WIN_USER}/...`, native `~/.config/Cursor/logs` if present |
-| **Bare Linux** (Ubuntu, etc.) | Linux memory, cursor-server, agent-tools, `~/.config/Cursor/logs` — no `/mnt/c` needed |
-
-Repo name keeps `wsl` for history; the script auto-detects **WSL** vs **Linux**.
+| **WSL2** | Memory, cursor-server, agent-tools, Windows logs via `/mnt/c/Users/{WIN_USER}/...`, plus `~/.config/Cursor/logs` if present |
+| **Bare Linux** (Ubuntu, etc.) | Memory, cursor-server, agent-tools, `~/.config/Cursor/logs` — no `/mnt/c` |
 
 ## Why it exists
 
@@ -26,13 +26,13 @@ Cursor often hits **Electron renderer OOM** (`"reason":"oom"` in `cursor-sentry-
 ## Install
 
 ```bash
-git clone https://github.com/logicencoder/cursor-wsl-health.git ~/cursor-wsl-health
-chmod +x ~/cursor-wsl-health/cursor_wsl_health.sh
-ln -sf ~/cursor-wsl-health/cursor_wsl_health.sh ~/cursor_wsl_health.sh
-~/cursor_wsl_health.sh
+git clone https://github.com/logicencoder/cursor-health.git ~/cursor-health
+chmod +x ~/cursor-health/cursor_health.sh
+ln -sf ~/cursor-health/cursor_health.sh ~/cursor_health.sh
+~/cursor_health.sh
 ```
 
-Run in a **terminal** (TTY). On WSL, not a non-interactive Cursor output panel.
+Run in a **terminal** (TTY), not a non-interactive IDE output panel.
 
 ## Workflow
 
@@ -46,7 +46,7 @@ Run in a **terminal** (TTY). On WSL, not a non-interactive Cursor output panel.
 |---|--------|
 | 1 | Status dashboard |
 | 2 | Delete agent-tools `.txt` > 10 MB |
-| 3 | Delete old Cursor logs (>7 days) — WSL + Linux paths |
+| 3 | Delete old Cursor logs (>7 days) |
 | 4 | 2 + 3 + page cache (recommended) |
 | 5 | Soft reset `cursor-server` |
 | 6 | Full tune-up (4 + 5) |
@@ -70,12 +70,12 @@ Chat transcripts, project reports/scripts, source code, git, existing checkpoint
 ## CLI
 
 ```bash
-~/cursor_wsl_health.sh status
-~/cursor_wsl_health.sh clean
-~/cursor_wsl_health.sh soft-reset
-~/cursor_wsl_health.sh all
+~/cursor_health.sh status
+~/cursor_health.sh clean
+~/cursor_health.sh soft-reset
+~/cursor_health.sh all
 ```
 
-**Logic Encoder** — [logicencoder.com](https://logicencoder.com) · [GitHub](https://github.com/logicencoder/cursor-wsl-health)
+**Logic Encoder** — [logicencoder.com](https://logicencoder.com) · [GitHub](https://github.com/logicencoder/cursor-health)
 
 Use at your own risk.

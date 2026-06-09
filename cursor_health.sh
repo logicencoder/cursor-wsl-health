@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Cursor health — interactive menu. Linux + WSL. No arguments needed.
 # Logic Encoder — https://logicencoder.com
-# Repo: https://github.com/logicencoder/cursor-wsl-health
-# Run: ~/cursor_wsl_health.sh  (symlink to this file)
+# Repo: https://github.com/logicencoder/cursor-health
+# Run: ~/cursor_health.sh
 #
 # Keeps ONE long agent chat: use "Reload Window" after clean/reset (not New Chat).
 
@@ -502,9 +502,9 @@ if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   init_platform
   echo "Cursor health — Logic Encoder (${PLATFORM_LABEL})"
   echo "  https://logicencoder.com"
-  echo "  https://github.com/logicencoder/cursor-wsl-health"
+  echo "  https://github.com/logicencoder/cursor-health"
   echo ""
-  echo "Run without arguments: ~/cursor_wsl_health.sh"
+  echo "Run without arguments: ~/cursor_health.sh"
   exit 0
 fi
 
